@@ -1,0 +1,65 @@
+CREATE DATABASE BankDB;
+USE BankDB;
+
+-- Customers
+CREATE TABLE Customers (
+    CustomerID INT AUTO_INCREMENT PRIMARY KEY,
+    Name VARCHAR(100),
+    Email VARCHAR(100),
+    Phone VARCHAR(20)
+);
+
+-- Accounts
+CREATE TABLE Accounts (
+    AccountID INT AUTO_INCREMENT PRIMARY KEY,
+    CustomerID INT,
+    AccountType VARCHAR(50),
+    Balance DECIMAL(12,2),
+    FOREIGN KEY (CustomerID) REFERENCES Customers(CustomerID)
+);
+
+-- Transactions
+CREATE TABLE Transactions (
+    TransactionID INT AUTO_INCREMENT PRIMARY KEY,
+    AccountID INT,
+    TransactionDate DATE,
+    TransactionType VARCHAR(20), -- 'Deposit' or 'Withdrawal'
+    Amount DECIMAL(12,2),
+    FOREIGN KEY (AccountID) REFERENCES Accounts(AccountID)
+);
+
+
+-- Insert 20 customers
+INSERT INTO Customers (Name, Email, Phone)
+SELECT CONCAT('Customer ', n),
+       CONCAT('customer', n, '@example.com'),
+       CONCAT('+23480', LPAD(n, 7, '0'))
+FROM (SELECT @row := @row + 1 AS n 
+      FROM (SELECT 0 UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 
+            UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) t1,
+           (SELECT 0 UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 
+            UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) t2,
+           (SELECT @row:=0) t0 LIMIT 20) numbers;
+
+-- Insert 30 accounts
+INSERT INTO Accounts (CustomerID, AccountType, Balance)
+SELECT FLOOR(1 + RAND()*20), 
+       IF(RAND() < 0.5, 'Savings', 'Checking'),
+       FLOOR(1000 + RAND()*5000)
+FROM (SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 
+      UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9 UNION SELECT 10) t1,
+     (SELECT 1 UNION SELECT 2 UNION SELECT 3) t2
+LIMIT 30;
+
+-- Insert 300 transactions
+INSERT INTO Transactions (AccountID, TransactionDate, TransactionType, Amount)
+SELECT FLOOR(1 + RAND()*30),
+       DATE_ADD('2025-01-01', INTERVAL FLOOR(RAND()*365) DAY),
+       IF(RAND() < 0.5, 'Deposit', 'Withdrawal'),
+       FLOOR(100 + RAND()*2000)
+FROM (SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 
+      UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9 UNION SELECT 10) t1,
+     (SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 
+      UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9 UNION SELECT 10) t2,
+     (SELECT 1 UNION SELECT 2 UNION SELECT 3) t3
+LIMIT 300;
